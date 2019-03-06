@@ -20,14 +20,14 @@ start:
 
     call print_pixel
 
-    call print_text
+    ;call print_text
 
-    call draw_square
+    ;call draw_square
 
+    call draw_rock
 
-    ;cli ; stop execution
-    ;hlt
-    jmp $
+    cli ; stop execution
+    hlt
 
 ; ----------------------------------------------------------------------
 
@@ -95,6 +95,52 @@ draw_square:
 .done:   
     ret
 
+draw_rock:
+
+    mov ah, 0Ch
+    mov bh, 0               ; page number
+    mov cx, 50              ; x
+    mov dx, 150             ; y
+
+    mov si, 0       ; index of the bit we are checking
+
+.row: ; main loop, this will iterate over every bit of [rock], if it is a 1 the .one part will be executed, if it is a 0 the .zero part will
+    
+    cmp si, 16 ; length of the rock variable
+    je .done
+
+    push eax
+    mov dx, [rock]    ; load the bitpattern
+    bt dx, si      ; check the si th bit and store it on cf
+    pop eax
+
+    jc .zero
+    jmp .one
+
+.zero:
+
+    mov al, 0ah       ; color green
+    int 10h
+
+    inc si
+    inc cx
+
+    jmp .row
+
+.one:
+
+    mov al, 06h       ; color brown
+
+    int 10h
+
+    inc si
+    inc cx
+
+    jmp .row
+
+.done:
+    ret
+
 
 print_text:
 
@@ -112,6 +158,8 @@ print_text:
     ret
 
 msg: db "World"
+rock: dw 0xaaaa  ; 2 bytes
+
 
 times 510 - ($ - $$) db 0   ; padding with 0 at the end
 dw 0xAA55                   ; PC boot signature
