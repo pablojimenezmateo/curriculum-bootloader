@@ -102,30 +102,24 @@ draw_rock:
     mov cx, 50              ; x
     mov dx, 150             ; y
 
-    mov si, 0       ; index of the bit we are checking
+    mov si, 0               ; index of the bit we are checking (width)
+    mov di, 0               ; index of the bit we are checking (height)
 
 .row: ; main loop, this will iterate over every bit of [rock], if it is a 1 the .one part will be executed, if it is a 0 the .zero part will
     
-    cmp si, 16 ; length of the rock variable
+    cmp si, 16 ; width of the rock
+    je .next_row
+
+    cmp di, 32
     je .done
 
     push dx
-    mov dx, [rock]    ; load the bitpattern
+    mov dx, [rock + di]    ; load the bitpattern
     bt dx, si      ; check the si th bit and store it on cf
     pop dx
 
     jc .one
     jmp .zero
-
-.zero:
-
-    mov al, 0ah       ; color green
-    int 10h
-
-    inc si
-    inc cx
-
-    jmp .row
 
 .one:
 
@@ -136,6 +130,26 @@ draw_rock:
     inc cx
 
     jmp .row
+
+.zero:
+
+    mov al, 00h       ; color black
+    int 10h
+
+    inc si
+    inc cx
+
+    jmp .row
+
+.next_row:
+
+    add di, 2  ; next byte
+    mov si, 0  ; firs bit
+    inc dx     ; next row
+    mov cx, 50 ; first row
+
+    jmp .row
+
 
 .done:
     ret
@@ -157,6 +171,7 @@ print_text:
 
 msg: db "World"
 rock: dw 0xEDC3, 0xF3FB, 0xF3FF, 0xF3FE, 0x67FE, 0xF7FF, 0xF7FD, 0xF7FD, 0xE7FE, 0xF7FF, 0xE7BE, 0xD93C, 0xBFBE, 0xBE3D, 0xFF3F, 0x3F34 ; 32 bytes
+;rock: dw 0xAAAA, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0xE7FE, 0xF7FF, 0xE7BE, 0xD93C, 0xBFBE, 0xBE3D, 0xFF3F, 0x3F34 ; 32 bytes
 
 
 times 510 - ($ - $$) db 0   ; padding with 0 at the end
