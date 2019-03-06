@@ -20,9 +20,9 @@ start:
 
     call print_pixel
 
-    ;call print_text
+    call print_text
 
-    ;call draw_square
+    call draw_square
 
     call draw_rock
 
@@ -156,7 +156,7 @@ print_text:
     ret
 
 msg: db "World"
-rock: dw 0xffff  ; 2 bytes
+rock: dw 0xEDC3, 0xF3FB, 0xF3FF, 0xF3FE, 0x67FE, 0xF7FF, 0xF7FD, 0xF7FD, 0xE7FE, 0xF7FF, 0xE7BE, 0xD93C, 0xBFBE, 0xBE3D, 0xFF3F, 0x3F34 ; 32 bytes
 
 
 times 510 - ($ - $$) db 0   ; padding with 0 at the end
