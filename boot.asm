@@ -1,6 +1,9 @@
 bits 16
 
-_main:
+jmp start  ; https://stackoverflow.com/questions/47277702/custom-bootloader-booted-via-usb-drive-produces-incorrect-output-on-some-compute
+resb 0x50
+
+start:
     mov ax, 07C0h
     add ax, 288
     mov ss, ax              ; ss = stack space
@@ -21,8 +24,10 @@ _main:
 
     call draw_square
 
-    cli ; stop execution
-    hlt
+
+    ;cli ; stop execution
+    ;hlt
+    jmp $
 
 ; ----------------------------------------------------------------------
 
@@ -59,10 +64,10 @@ draw_square:
 
     mov ah, 0Ch             ; change color for a single pixel
 
-    mov al, 1010b           ; color
+    mov al, 0ah           ; color
     mov bh, 0               ; page number
-    mov cx, 160             ; x
-    mov dx, 100             ; y
+    mov cx, 80             ; x
+    mov dx, 30             ; y
 
 .row:
 
@@ -70,7 +75,7 @@ draw_square:
 
     inc cx                  ; go one pixel right
 
-    cmp cx, 176          ; 16 px width
+    cmp cx, 96          ; 16 px width
     je .nextrow             ; paint next row
 
 
@@ -78,10 +83,10 @@ draw_square:
 
 .nextrow:
 
-    mov cx, 160
+    mov cx, 80
     inc dx                  ; go one pixel down
 
-    cmp dx, 132             ;32 px high
+    cmp dx, 62             ;32 px high
     je .done
 
     jmp .row
