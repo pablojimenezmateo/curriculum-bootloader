@@ -109,13 +109,13 @@ draw_rock:
     cmp si, 16 ; length of the rock variable
     je .done
 
-    push eax
+    push dx
     mov dx, [rock]    ; load the bitpattern
     bt dx, si      ; check the si th bit and store it on cf
-    pop eax
+    pop dx
 
-    jc .zero
-    jmp .one
+    jc .one
+    jmp .zero
 
 .zero:
 
@@ -130,7 +130,6 @@ draw_rock:
 .one:
 
     mov al, 06h       ; color brown
-
     int 10h
 
     inc si
@@ -140,7 +139,6 @@ draw_rock:
 
 .done:
     ret
-
 
 print_text:
 
@@ -158,7 +156,7 @@ print_text:
     ret
 
 msg: db "World"
-rock: dw 0xaaaa  ; 2 bytes
+rock: dw 0xffff  ; 2 bytes
 
 
 times 510 - ($ - $$) db 0   ; padding with 0 at the end
