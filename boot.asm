@@ -18,13 +18,9 @@ start:
     int 10h                 ; call
 
 
-    ;call print_pixel
-
     call print_text_1
 
     call print_text_2
-
-    ;call draw_square
 
     call draw_border
 
@@ -124,70 +120,6 @@ draw_border:
 .done:
     ret
 
-print_pixel:
-
-    ; drawing random pixels
-
-    mov ah, 0Ch             ; change color for a single pixel
-
-    mov al, 0000b           ; color
-    mov bh, 0               ; page number
-    mov cx, 30              ; x
-    mov dx, 100             ; y
-
-    int 10h                 ; paint 1st pixel
-
-.repeat:
-
-    inc al                  ; change color
-    inc cx                  ; go one pixel right
-    inc dx                  ; go one pixel down
-
-    int 10h                 ; paint
-
-    cmp al, 1111b
-    je .done                ; last color was painted
-
-    jmp .repeat
-
-.done:   
-    ret
-
-draw_square:
-
-    mov ah, 0Ch             ; change color for a single pixel
-
-    mov al, 0ah             ; color
-    mov bh, 0               ; page number
-    mov cx, 80             ; x
-    mov dx, 30             ; y
-
-.row:
-
-    int 10h                 ; paint
-
-    inc cx                  ; go one pixel right
-
-    cmp cx, 96          ; 16 px width
-    je .nextrow             ; paint next row
-
-
-    jmp .row
-
-.nextrow:
-
-    mov cx, 80
-    inc dx                  ; go one pixel down
-
-    cmp dx, 62             ;32 px high
-    je .done
-
-    jmp .row
-
-
-.done:   
-    ret
-
 draw_rock_tile:
 
     push bp                ; save old base pointer
@@ -245,7 +177,7 @@ draw_rock_tile:
     add di, 2  ; next byte
     mov si, 0  ; firs bit
     inc dx     ; next row
-    ;mov cx, 0  ; first row
+
     pop cx
     push cx
 
