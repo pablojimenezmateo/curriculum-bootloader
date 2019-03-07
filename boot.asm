@@ -52,43 +52,61 @@ draw_border:
     add si, 16
 
     cmp si, 320
-    je .left_border_init
+    je .right_border_init
 
     jmp .top_border
+
+;------------------------ Vertical borders
+.right_border_init:
+
+    mov si, 16
+    mov di, 0
+    jmp .vertical_border
 
 .left_border_init:
 
     mov si, 16
+    mov di, 304
 
-.left_border:
+.vertical_border:
 
     push si                  ; initial y position to draw the rock
-    push 0                 ; initial x position to draw the rock
+    push di                   ; initial x position to draw the rock
     call draw_rock_tile  
 
     add si, 16
 
     cmp si, 192
-    je .right_border_init
+    je .check_finish
 
-    jmp .left_border
+    jmp .vertical_border
 
-.right_border_init:
 
-    mov si, 16
+.check_finish:
 
-.right_border:
-
-    push si                  ; initial y position to draw the rock
-    push 304                 ; initial x position to draw the rock
-    call draw_rock_tile  
-
-    add si, 16
-
-    cmp si, 192
+    cmp di, 304
     je .bottom_border_left_init
+    jmp .left_border_init
 
-    jmp .right_border
+;.right_border_init:
+;
+;    mov si, 16
+;
+;.right_border:
+;
+;    push si                  ; initial y position to draw the rock
+;    push di                 ; initial x position to draw the rock
+;    call draw_rock_tile  
+;
+;    add si, 16
+;
+;    cmp si, 192
+;    je .bottom_border_left_init
+;
+;    jmp .right_border
+
+
+;---------------------- Vertical borders
 
 .bottom_border_left_init:
 
@@ -227,7 +245,7 @@ rock: dw 0xC3B7, 0xDFCF, 0xFFCF, 0x7FCF, 0x7FE6, 0xFFEF, 0xBFEF, 0xBFEF, 0x7FE7,
 fire: dw 0x2020, 0x8020, 0x8800, 0xA810, 0xA880, 0xA288, 0xA6A8, 0xAAA2, 0x9AA2, 0x66AA, 0x55AA, 0x7568, 0xFD68, 0xF5A0, 0x56A0, 0xAA00 ; 32 bytes
 wiseman: dw 0x5400, 0x7700, 0x4500, 0x4500, 0x5E00, 0xFF80, 0x0FA0, 0xFBE8, 0xFAE9, 0xFAA9, 0xE8A9, 0xA8A8, 0xA8A8, 0xAA20, 0xAA00, 0x9680; 32 bytes
 
-gef:     dw 0xAA00, 0xAA80, 0xAAA0, 0x88A8, 0x1818, 0x5158, 0x5558, 0x56A8, 0x5558, 0x5018, 0x5ED8, 0x5ED0, 0x9550, 0x65A0, 0x2A80, 0xBC00, 0x3F00, 0x33C0, 0x30F0, 0x3040, 0x0000, 0x2000; 44 bytes
+;gef:     dw 0xAA00, 0xAA80, 0xAAA0, 0x88A8, 0x1818, 0x5158, 0x5558, 0x56A8, 0x5558, 0x5018, 0x5ED8, 0x5ED0, 0x9550, 0x65A0, 0x2A80, 0xBC00, 0x3F00, 0x33C0, 0x30F0, 0x3040, 0x0000, 0x2000; 44 bytes
 
-;times 510 - ($ - $$) db 0   ; padding with 0 at the end
+times 510 - ($ - $$) db 0   ; padding with 0 at the end
 dw 0xAA55                   ; PC boot signature
