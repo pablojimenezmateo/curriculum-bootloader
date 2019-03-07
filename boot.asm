@@ -5,25 +5,25 @@ boot:
     TIMES 3-($-$$) DB 0x90   ; Support 2 or 3 byte encoded JMPs before BPB.
 
     ; Dos 4.0 EBPB 1.44MB floppy
-    OEMname:           db    "mkfs.fat"  ; mkfs.fat is what OEMname mkdosfs uses
-    bytesPerSector:    dw    512
-    sectPerCluster:    db    1
-    reservedSectors:   dw    1
-    numFAT:            db    2
-    numRootDirEntries: dw    224
-    numSectors:        dw    2880
-    mediaType:         db    0xf0
-    numFATsectors:     dw    9
-    sectorsPerTrack:   dw    18
-    numHeads:          dw    2
-    numHiddenSectors:  dd    0
-    numSectorsHuge:    dd    0
-    driveNum:          db    0
-    reserved:          db    0
-    signature:         db    0x29
-    volumeID:          dd    0x2d7e5a1a
-    volumeLabel:       db    "Test name"
-    fileSysType:       db    "FAT12   "
+    ;OEMname:           db    "mkfs.fat"  ; mkfs.fat is what OEMname mkdosfs uses
+    ;bytesPerSector:    dw    512
+    ;sectPerCluster:    db    1
+    ;reservedSectors:   dw    1
+    ;numFAT:            db    2
+    ;numRootDirEntries: dw    224
+    ;numSectors:        dw    2880
+    ;mediaType:         db    0xf0
+    ;numFATsectors:     dw    9
+    ;sectorsPerTrack:   dw    18
+    ;numHeads:          dw    2
+    ;numHiddenSectors:  dd    0
+    ;numSectorsHuge:    dd    0
+    ;driveNum:          db    0
+    ;reserved:          db    0
+    ;signature:         db    0x29
+    ;volumeID:          dd    0x2d7e5a1a
+    ;volumeLabel:       db    "Test name"
+    ;fileSysType:       db    "FAT12   "
 
 start:
     mov ax, 07C0h
@@ -203,12 +203,12 @@ print_text:
     mov bp, sp             ; use the current stack pointer as new base pointer
     pusha
 
-    mov ax, 7c0h        ; beginning of the code
+    mov ax, 7c0h           ; beginning of the code
     mov es, ax
-    mov cx, [bp + 6]            ; length of string
-    mov dh, [bp + 8]            ; row to put string
-    mov dl, [bp + 10]           ; column to put string
-    mov bp, [bp + 4]
+    mov cx, [bp + 6]       ; length of string
+    mov dh, [bp + 8]       ; row to put string
+    mov dl, [bp + 10]      ; column to put string
+    mov bp, [bp + 4]       
 
     mov ah, 13h          ; function 13 - write string
     mov al, 01h          ; attrib in bl, move cursor
@@ -320,9 +320,9 @@ msg1:    db "IT'S DANGEROUS TO GO"
 msg2:    db "ALONE!   HIRE ME."
 rock:    dw 0xC3B7, 0xDFCF, 0xFFCF, 0x7FCF, 0x7FE6, 0xFFEF, 0xBFEF, 0xBFEF, 0x7FE7, 0xFFEF, 0x7DE7, 0x3C9B, 0x7DFD, 0xBC7D, 0xFCFF, 0x2CFC ; 32 bytes
 fire:    dw 0x2020, 0x8020, 0x8800, 0xA810, 0xA880, 0xA288, 0xA6A8, 0xAAA2, 0x9AA2, 0x66AA, 0x55AA, 0x7568, 0xFD68, 0xF5A0, 0x56A0, 0xAA00 ; 32 bytes
-;wiseman: dw 0x5400, 0x7700, 0x4500, 0x4500, 0x5E00, 0xFF80, 0x0FA0, 0xFBE8, 0xFAE9, 0xFAA9, 0xE8A9, 0xA8A8, 0xA8A8, 0xAA20, 0xAA00, 0x9680 ; 32 bytes
+wiseman: dw 0x5400, 0x7700, 0x4500, 0x4500, 0x5E00, 0xFF80, 0x0FA0, 0xFBE8, 0xFAE9, 0xFAA9, 0xE8A9, 0xA8A8, 0xA8A8, 0xAA20, 0xAA00, 0x9680 ; 32 bytes
 
-;gef:     dw 0xAA00, 0xAA80, 0xAAA0, 0x88A8, 0x1818, 0x5158, 0x5558, 0x56A8, 0x5558, 0x5018, 0x5ED8, 0x5ED0, 0x9550, 0x65A0, 0x2A80, 0xBC00, 0x3F00, 0x33C0, 0x30F0, 0x3040, 0x0000, 0x2000; 44 bytes
+gef:     dw 0xAA00, 0xAA80, 0xAAA0, 0x88A8, 0x1818, 0x5158, 0x5558, 0x56A8, 0x5558, 0x5018, 0x5ED8, 0x5ED0, 0x9550, 0x65A0, 0x2A80, 0xBC00, 0x3F00, 0x33C0, 0x30F0, 0x3040, 0x0000, 0x2000; 44 bytes
 
 times 510 - ($ - $$) db 0   ; padding with 0 at the end
 dw 0xAA55                   ; PC boot signature
