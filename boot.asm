@@ -153,54 +153,45 @@ draw_rock_tile:
     mov bp, sp             ; use the current stack pointer as new base pointer
     pusha
 
+    mov cx, [bp + 4]       ; x coordinate
+    mov dx, [bp + 6]       ; y coordinate
+    
+                            ; initializing to 0, saves one byte from using mov
+    xor si, si              ; index of the bit we are checking (width)
+    xor di, di
+
+.row: ; main loop, this will iterate over every bit of [rock], if it is a 1 the .one part will be executed, if it is a 0 the .zero part will
+  
+    cmp si, 16     ; check if we have to move to the next byte/row
+    jne .same_row  ; Byte checked
+
+    xor si, si     ; this executes if we move to the next row
+    cmp di, 32     ; if we have finished with the tile
+    je .done
+    add di, 2      ; next row
+    inc dx
+
+    mov cx, [bp + 4]       ; x coordinate
+
+
+.same_row:
+
+    mov ax, [rock + di]
+    bt ax, si              ; check the si th bit and store it on cf
+    jnc .pass
+
+    ; draw
     mov ah, 0Ch
     xor bh, bh             ; page number 0
     mov al, 06h            ; Brown
-
-    mov cx, [bp + 4]       ; x coordinate
-    mov dx, [bp + 6]       ; y coordinate
-    push cx                ; we need to store the x value for .next_row
-     
-                            ; initializing to 0, saves one byte from using mov
-    xor si, si              ; index of the bit we are checking (width)
-    xor di, di              ; index of the bit we are checking (height)
-
-.row: ; main loop, this will iterate over every bit of [rock], if it is a 1 the .one part will be executed, if it is a 0 the .zero part will
-    
-    cmp si, 16 ; width of the rock
-    je .next_row
-
-    cmp di, 32 ;32 bytes
-    je .done
-
-    push dx
-    mov dx, [rock + di]    ; load the bitpattern
-    bt dx, si              ; check the si th bit and store it on cf
-    pop dx
-
-    jnc .pass              ; zero, do not draw anything
-
-    int 10h                ; One, draw
+    int 10h
 
 .pass:
     inc si
     inc cx
-
-    jmp .row
-
-.next_row:
-
-    add di, 2   ; next byte
-    xor si, si  ; firs bit
-    inc dx      ; next row
-
-    pop cx
-    push cx
-
     jmp .row
 
 .done:
-    pop cx
     popa
     mov sp, bp
     pop bp
