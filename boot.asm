@@ -39,19 +39,27 @@ start:
 
     int 10h                 ; call
 
-    push 9
-    push 5
-    push 20
-    push msg1
+    push 9                  ; column
+    push 5                  ; row
+    push 20                 ; msg length
+    push msg1               ; msg to write
     call print_text
-
-    push 11
-    push 6
-    push 17
-    push msg2
+    
+    push 11                 ; column
+    push 6                  ; row
+    push 17                 ; msg length
+    push msg2               ; msg to write
     call print_text
 
     call draw_border
+
+    ;push 50                   ; x
+    ;push 50                   ; y
+    ;push 0Ch                  ; first color, red
+    ;push 0Eh                  ; second color, yellow
+    ;push fire                 ; sprite to draw
+    ;push 16                   ; how many rows the sprite has
+    ;call draw_sprite
 
     cli ; stop execution
     hlt
@@ -97,7 +105,7 @@ xor dx, dx ; border index
 
 .draw:
 
-    push si                  ; initial y position to draw the rock
+    push si                   ; initial y position to draw the rock
     push di                   ; initial x position to draw the rock
     call draw_rock_tile  
 
@@ -147,6 +155,7 @@ draw_rock_tile:
 
     mov ah, 0Ch
     xor bh, bh             ; page number 0
+    mov al, 06h            ; Brown
 
     mov cx, [bp + 4]       ; x coordinate
     mov dx, [bp + 6]       ; y coordinate
@@ -169,21 +178,11 @@ draw_rock_tile:
     bt dx, si              ; check the si th bit and store it on cf
     pop dx
 
-    jc .one
+    jnc .pass              ; zero, do not draw anything
 
-.zero:
+    int 10h                ; One, draw
 
-    xor al, al       ; color black
-    jmp .draw
-
-.one:
-
-    mov al, 06h       ; color brown
-
-.draw:
-
-    int 10h
-
+.pass:
     inc si
     inc cx
 
@@ -191,15 +190,14 @@ draw_rock_tile:
 
 .next_row:
 
-    add di, 2  ; next byte
+    add di, 2   ; next byte
     xor si, si  ; firs bit
-    inc dx     ; next row
+    inc dx      ; next row
 
     pop cx
     push cx
 
     jmp .row
-
 
 .done:
     pop cx
@@ -233,13 +231,107 @@ print_text:
 
     ret 8
 
-msg1: db "IT'S DANGEROUS TO GO"
-msg2: db "ALONE!   HIRE ME."
-rock: dw 0xC3B7, 0xDFCF, 0xFFCF, 0x7FCF, 0x7FE6, 0xFFEF, 0xBFEF, 0xBFEF, 0x7FE7, 0xFFEF, 0x7DE7, 0x3C9B, 0x7DFD, 0xBC7D, 0xFCFF, 0x2CFC ; 32 bytes
-fire: dw 0x2020, 0x8020, 0x8800, 0xA810, 0xA880, 0xA288, 0xA6A8, 0xAAA2, 0x9AA2, 0x66AA, 0x55AA, 0x7568, 0xFD68, 0xF5A0, 0x56A0, 0xAA00 ; 32 bytes
-wiseman: dw 0x5400, 0x7700, 0x4500, 0x4500, 0x5E00, 0xFF80, 0x0FA0, 0xFBE8, 0xFAE9, 0xFAA9, 0xE8A9, 0xA8A8, 0xA8A8, 0xAA20, 0xAA00, 0x9680; 32 bytes
 
-gef:     dw 0xAA00, 0xAA80, 0xAAA0, 0x88A8, 0x1818, 0x5158, 0x5558, 0x56A8, 0x5558, 0x5018, 0x5ED8, 0x5ED0, 0x9550, 0x65A0, 0x2A80, 0xBC00, 0x3F00, 0x33C0, 0x30F0, 0x3040, 0x0000, 0x2000; 44 bytes
+; 00 is always black and 11 is always white
+;draw_sprite:
+;
+;    push bp                ; save old base pointer
+;    mov bp, sp             ; use the current stack pointer as new base pointer
+;    pusha
+;
+;    mov ah, 0Ch
+;    xor bh, bh             ; page number 0
+;
+;    mov cx, [bp + 12]       ; x coordinate where to draw the sprite
+;    mov dx, [bp + 14]       ; y coordinate where to draw the sprite
+;    push cx                 ; we need to store the x value for .next_row
+;     
+;                            ; initializing to 0, saves one byte from using mov
+;    xor si, si              ; index of the bit we are checking (width)
+;    xor di, di              ; index of the bit we are checking (height)
+;
+;.row:
+;    
+;    push dx
+;    push ax
+;    mov ax, [bp + 4]       ; sprite address
+;
+;    ; most significant
+;    mov dx, [bp + 4 + di]      ; load byte  00 10 00 00 # 00 10 00 00
+;    bt dx, si              ; check the si th bit and store it on cf
+;
+;    xor ax, ax             ; store the color index
+;
+;    jnc .zero_1                ; if the bit is zero
+;    add ax, 2
+;    inc si
+;
+;.zero_1:
+;    ; less significant
+;    mov dx, [bp + 4 + di]      ; load byte  00 10 00 00 # 00 10 00 00
+;    bt dx, si              ; check the si th bit and store it on cf
+;    jnc .zero_2
+;    add ax, 1
+;    inc si
+;
+;.zero_2:
+;    cmp ax, 0              ; black
+;    je .black
+;
+;    cmp ax, 1              ; first color
+;    je .first_color
+;
+;    cmp ax, 2              ; second color
+;    je .second_color
+;
+;    cmp ax, 3              ; white
+;    je .white
+;
+;
+;.black:
+;    pop ax
+;    pop dx
+;
+;    mov al, 01h            ; Brown
+;    int 10h
+;    jmp .row
+;
+;
+;.first_color:
+;    pop ax
+;    pop dx
+;    mov al, 02h            ; Brown
+;    int 10h
+;    jmp .row
+;
+;.second_color:
+;    pop ax
+;    pop dx
+;    mov al, 03h            ; Brown
+;    int 10h
+;    jmp .row
+;
+;.white:
+;    pop ax
+;    pop dx
+;    mov al, 0fh            ; Brown
+;    int 10h
+;    jmp .row
+;
+;.done:
+;    popa
+;    mov sp, bp
+;    pop bp
+;
+;    ret 12
+
+msg1:    db "IT'S DANGEROUS TO GO"
+msg2:    db "ALONE!   HIRE ME."
+rock:    dw 0xC3B7, 0xDFCF, 0xFFCF, 0x7FCF, 0x7FE6, 0xFFEF, 0xBFEF, 0xBFEF, 0x7FE7, 0xFFEF, 0x7DE7, 0x3C9B, 0x7DFD, 0xBC7D, 0xFCFF, 0x2CFC ; 32 bytes
+fire:    dw 0x2020, 0x8020, 0x8800, 0xA810, 0xA880, 0xA288, 0xA6A8, 0xAAA2, 0x9AA2, 0x66AA, 0x55AA, 0x7568, 0xFD68, 0xF5A0, 0x56A0, 0xAA00 ; 32 bytes
+;wiseman: dw 0x5400, 0x7700, 0x4500, 0x4500, 0x5E00, 0xFF80, 0x0FA0, 0xFBE8, 0xFAE9, 0xFAA9, 0xE8A9, 0xA8A8, 0xA8A8, 0xAA20, 0xAA00, 0x9680 ; 32 bytes
+
+;gef:     dw 0xAA00, 0xAA80, 0xAAA0, 0x88A8, 0x1818, 0x5158, 0x5558, 0x56A8, 0x5558, 0x5018, 0x5ED8, 0x5ED0, 0x9550, 0x65A0, 0x2A80, 0xBC00, 0x3F00, 0x33C0, 0x30F0, 0x3040, 0x0000, 0x2000; 44 bytes
 
 times 510 - ($ - $$) db 0   ; padding with 0 at the end
 dw 0xAA55                   ; PC boot signature
