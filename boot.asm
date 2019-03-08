@@ -30,7 +30,11 @@ boot:
 
 start:
 
+    ; In real hardware the BIOS puts the address of the booting drive on the dl register
+    ; so I am writing that addres into memory at [bootdrv]
     mov [bootdrv], dl
+
+    ; Setting the stack
     mov ax, 07C0h
     add ax, 288
     mov ss, ax              ; ss = stack space
@@ -39,11 +43,14 @@ start:
     mov ax, 07C0h
     mov ds, ax              ; ds = data segment
 
-    mov ah, 00d             ; set video mode to graphical
+    mov ah, 00d             ; Set video mode to graphical
     mov al, 13d             ; 13h - graphical mode, 40x25. 256 colors.;320x200 pixels. 1 page.
 
-    int 10h                 ; call
+    int 10h                 ; Call
 
+
+    ; The function print_text accepts a message and position and writes it to screen in
+    ; mode 13h
     push 9                  ; column
     push 5                  ; row
     push 20                 ; msg length
@@ -56,50 +63,52 @@ start:
     push msg2               ; msg to write
     call print_text
 
-    ;push 11                 ; column
-    ;push 6                  ; row
-    ;push 17                 ; msg length
-    ;push msg2               ; msg to write
-    ;call print_text
-
+    ; draw_border is in charge of calling draw_rock in a loop to draw all the cave border
+    ; no parameters
     call draw_border
 
-
-
-    ;----- Not enough space for sprites, move that to the second stage
+    ; You only have 512 bytes of space on the first stage, and my napking maths told me that
+    ; the sprites were too much. So on the first stage I write the text and draw the border
+    ; (or else I would not have enough space on second stage), and then jump to second stagr
     ; https://stackoverflow.com/questions/2065370/how-to-load-second-stage-boot-loader-from-first-stage
-    ; Load stage 2 to memory.
+    ; Restore the direction of the booting drive
     mov dl, [bootdrv]
 
+; I need this label in case the boot fails, in real hardware the BIOS puts the drive address on dl,
+; but if you are using qemu dl must be 0x80 for it to boot. So I try to boot normally first and if it
+; fails I retry for qemu
 jump_to_stage2:
 
     mov ah, 0x02
-    ; Number of sectors to read.
-    mov al, 1
-    ; This may not be necessary as many BIOS set it up as an initial state.
-    ;mov dl, 0x80
-    ; Cylinder number.
-    mov ch, 0
-    ; Head number.
-    mov dh, 0
-    ; Starting sector number. 2 because 1 was already loaded.
-    mov cl, 2
-    ; Where to load to.
-    mov bx, stage2
+    mov al, 1         ; Number of sectors to read
+    mov ch, 0         ; Cylinder number
+    mov dh, 0         ; Head number
+    mov cl, 2         ; Starting sector number. 2 because 1 was already loaded.
+    mov bx, stage2    ; Where the stage 2 code is
+
     int 0x13
 
     mov dl, 0x80
-    jc jump_to_stage2 ; if error reading, set dl to 0x80 and try again, this should make it work in qemu
+    jc jump_to_stage2 ; If error loading, set dl to 0x80 and try again, this should make it work in qemu
 
     jmp stage2
 
-; ----------------------------------------------------------------------
+; Stage 1 functions
 
+; This function calls draw_rock on a loop in order to draw the whole border
 draw_border:
+                                 ; You will notice that I use xor a lot
+                                 ; this is to set a register to 0
+                                 ; is on byte less than mov and I need those bytes
 
-xor cx, cx ; draw horizontally
-xor dx, dx ; border index
+xor cx, cx                       ; Draw horizontally
+xor dx, dx                       ; Border index
 
+; The inits set the initial parameters for each border
+; di = Initial x position
+; si = Initial y position
+; ax = When to stop
+; cx = Draw horizontally (0) or vertically (1)
 .top_border_init:
     xor si, si
     xor di, di
@@ -134,27 +143,31 @@ xor dx, dx ; border index
 
 .draw:
 
-    push si                   ; initial y position to draw the rock
-    push di                   ; initial x position to draw the rock
+    push si                        ; Initial y position to draw the rock
+    push di                        ; Initial x position to draw the rock
     call draw_rock_tile  
 
-    cmp cx, 0  ;if horizontal
+    cmp cx, 0                      ; If we are drawing horizontally
     jne .vertical_index_update
 
+    ; Update the horizontal index (di)
     add di, 16
     cmp di, ax
     je .check_finish
 
     jmp .draw
 
+; Update the vertical index (si)
 .vertical_index_update:
+
     add si, 16
     cmp si, ax
     je .check_finish
 
     jmp .draw
 
-
+; If we go here, we have finished a border, increment the border index
+; and continue
 .check_finish:
 
     inc dx       ; we have finished a border
@@ -176,279 +189,333 @@ xor dx, dx ; border index
 .done:
     ret
 
+; This function draws a rock, the coordinates are the top-left corner
+;
+; The rock sprite is encoded as following
+;     
+;    - The tile is 16x16px
+;    - Each 1 represents a brown pixel
+;    - Each 0 represents a black pixel (or no draw since the background is black)
+;
+; So we iterate through every bit on [rock] to do that. Each byte is a row.
+;
+; Parameters:
+;
+;    - [bp + 4] x coordinate
+;    - [bp + 6] y coordinate
+;
 draw_rock_tile:
 
-    push bp                ; save old base pointer
-    mov bp, sp             ; use the current stack pointer as new base pointer
+    push bp                 ; Save old base pointer
+    mov bp, sp              ; Use the current stack pointer as new base pointer
     pusha
 
-    mov cx, [bp + 4]       ; x coordinate
-    mov dx, [bp + 6]       ; y coordinate
+    mov cx, [bp + 4]        ; x coordinate
+    mov dx, [bp + 6]        ; y coordinate
     
-                            ; initializing to 0, saves one byte from using mov
-    xor si, si              ; index of the bit we are checking (width)
-    xor di, di
+                            ; Initializing to 0, saves one byte from using mov
+    xor si, si              ; Index of the bit we are checking (width)
+    xor di, di              ; How many bytes have we read
 
-.row: ; main loop, this will iterate over every bit of [rock], if it is a 1 the .one part will be executed, if it is a 0 the .zero part will
+.row:                       ; Main loop, this will iterate over every bit of [rock]
   
-    cmp si, 16     ; check if we have to move to the next byte/row
-    jne .same_row  ; Byte checked
+    cmp si, 16              ; Check if we have to move to the next byte/row
+    jne .same_row           ; We are still on the same row
 
-    xor si, si     ; this executes if we move to the next row
-    cmp di, 32     ; if we have finished with the tile
+                            ; This executes if we move to the next row
+    xor si, si              ; Set the index of the bit to 0
+    cmp di, 32              ; If we have read all the bytes (finished with the tile)
     je .done
-    add di, 2      ; next row
+
+    add di, 2               ; Next row/byte
     inc dx
 
-    mov cx, [bp + 4]       ; x coordinate
+    mov cx, [bp + 4]        ; Restore the x coordinate
 
 .same_row:
 
-    mov ax, [rock + di]
-    bt ax, si              ; check the si th bit and store it on cf
-    jnc .pass
+    mov ax, [rock + di]    ; Get the Byte
+    bt ax, si              ; Store the bit in position si on the carry flag (CF)
+    jnc .pass              ; jnc = jump if no carry, a.k.a. if it is a 0
 
-    ; draw
+                           ; It is a 1, draw
     mov ah, 0Ch
-    xor bh, bh             ; page number 0
-    mov al, 06h            ; Brown
+    xor bh, bh             ; Page number 0
+    mov al, 06h            ; Color brown
     int 10h
 
-.pass:
+.pass:                     ; Increment the counters
     inc si
     inc cx
     jmp .row
 
-.done:
+.done:                     ; Restore the stack and return
+
     popa
     mov sp, bp
     pop bp
     ret 4
 
+; Given a row, a column, a text and a length draws it to screen
+;
+;   - [bp + 4]  message direction
+;   - [bp + 6]  length of string
+;   - [bp + 8]  row to put the string
+;   - [bp + 10] column to put the string
+;
 print_text:
 
-    push bp                ; save old base pointer
-    mov bp, sp             ; use the current stack pointer as new base pointer
+    push bp                ; Save old base pointer
+    mov bp, sp             ; Use the current stack pointer as new base pointer
     pusha
 
-    mov ax, 7c0h           ; beginning of the code
+    mov ax, 7c0h           ; Beginning of the code
     mov es, ax
-    mov cx, [bp + 6]       ; length of string
-    mov dh, [bp + 8]       ; row to put string
-    mov dl, [bp + 10]      ; column to put string
+    mov cx, [bp + 6]       ; Length of string
+    mov dh, [bp + 8]       ; Row to put string
+    mov dl, [bp + 10]      ; Column to put string
     mov bp, [bp + 4]       
 
-    mov ah, 13h          ; function 13 - write string
-    mov al, 01h          ; attrib in bl, move cursor
-    mov bl, 0Fh          ; color white
+    mov ah, 13h            ; Function 13 - write string
+    mov al, 01h            ; Attrib in bl, move cursor
+    mov bl, 0Fh            ; Color white
 
-    int 10h             ; call BIOS service
+    int 10h
 
+                           ; Restore the stack and return
     popa
     mov sp, bp
     pop bp
 
     ret 8
 
-bootdrv: db 0
+; Store the drive addres given by the BIOS
+bootdrv: db 0              
 
+; Data
 msg1:    db "IT'S DANGEROUS TO GO"
 msg2:    db "ALONE!   TAKE ME."
 rock:    dw 0xC3B7, 0xDFCF, 0xFFCF, 0x7FCF, 0x7FE6, 0xFFEF, 0xBFEF, 0xBFEF, 0x7FE7, 0xFFEF, 0x7DE7, 0x3C9B, 0x7DFD, 0xBC7D, 0xFCFF, 0x2CFC ; 32 bytes
 
-times 510 - ($ - $$) db 0   ; padding with 0 at the end
+; The first sector MUST be 512 bytes and the last 2 bytes have to be 0xAA55 for it
+; to be bootable
+times 510 - ($ - $$) db 0   ; Padding with 0 at the end
 dw 0xAA55                   ; PC boot signature
 
 
 stage2:
 
-    ;copy the current sprite
-    mov      cx, 32
-    lea      di, [current_sprite]
-    lea      si, [wiseman_left]
-    rep      MOVSb
+    ; So apparently I was unable to pass the memory address of the current sprite as an argument
+    ; so I copy it to a new memory location and execute from there
 
-    push 32                   ; how many bytes the sprite has
-    push 06h                  ; first color, brown
-    push 04h                  ; second color, red
-    push 90                   ; y
-    push 152                  ; x
+    ; Copy the current sprite
+    mov      cx, 32               ; How many bytes
+    lea      di, [current_sprite] ; To where
+    lea      si, [wiseman_left]   ; From where
+    rep      movsb
+
+    push 32                       ; How many bytes the sprite has
+    push 06h                      ; First color, brown
+    push 04h                      ; Second color, red
+    push 90                       ; y coordinate
+    push 152                      ; x coordinate
     call draw_sprite
 
-    ; copy the current sprite
+    ; Copy the current sprite
     mov      cx, 32
     lea      di, [current_sprite]
     lea      si, [wiseman_right]
-    rep      MOVSb
+    rep      movsb
 
-    ;push 90                    ; y
-    push 160                   ; x
+    ; Now, the trick that saved most bytes (and the project) is to reuse the values stored in the stack
+    ; between sprites. So I reuse coordinates and sprite size. When the draw_sprite returns it DOES NOT
+    ; pop all the arguments, only the x coordinate
+
+    push 160                      ; x coordinate
     call draw_sprite
 
-    ; copy the current sprite
+    ; Copy the current sprite
     mov      cx, 32
     lea      di, [current_sprite]
     lea      si, [fire_left]
-    rep      MOVSb
+    rep      movsb
 
+    ; We need to change the colors, therefore we need to pop them
     pop si
     pop si
     pop si
-    push 0Eh                  ; first color, yellow
-    push 0Ch                  ; second color, red
-    push 90                   ; y
-    push 80                   ; x
+
+
+
+    ; We draw the two left parts of the fire to reuse the stack
+    push 0Eh                      ; First color, yellow
+    push 0Ch                      ; Second color, light red
+    push 90                       ; y coordinate
+    push 80                       ; x coordinate
     call draw_sprite
 
-    ; second fire left
-    ;push 90                    ; y
-    push 224                   ; x
+
+    push 224                      ; x coordinate
     call draw_sprite
 
-    ; copy the current sprite
+    ; Copy the current sprite
     mov      cx, 32
     lea      di, [current_sprite]
     lea      si, [fire_right]
-    rep      MOVSb
+    rep      movsb
 
-    ;push 90                   ; y
-    push 88                   ; x
+    ; Same y, same colors
+    push 88                       ; x coordinate
     call draw_sprite
 
-    ;push 90                    ; y
-    push 232                   ; x
+    push 232                      ; x coordinate
     call draw_sprite
 
-    ; copy the current sprite
-    mov      cx, 44
+    ; Copy the current sprite
+    mov      cx, 44               ; This one is 44 bytes instead of 32         
     lea      di, [current_sprite]
     lea      si, [gef_left]
-    rep      MOVSb
+    rep      movsb
 
+    ; Delete the arguments on the stack
     pop si
     pop si
     pop si
     pop si
 
-    push 44                   ; how many bytes the sprite has
-    push 07h                  ; first color, brown
-    push 06h                  ; second color, red
-    push 120                   ; y
-    push 152                   ; x
+    push 44                      ; How many bytes the sprite has
+    push 07h                     ; First color, gray
+    push 06h                     ; Second color, brown
+    push 120                     ; y coordinate
+    push 152                     ; x coordinate
     call draw_sprite
 
-    ; copy the current sprite
+    ; Copy the current sprite
     mov      cx, 44
     lea      di, [current_sprite]
     lea      si, [gef_right]
-    rep      MOVSb
+    rep      movsb
 
-    ;push 120                   ; y
-    push 160                   ; x
+    push 160                     ; x coordinate
     call draw_sprite
 
    cli
    hlt
 
-; 00 is always black and 11 is always white
+; This function is in charge of drawing a sprite, the sprite MUST be 16 pixels wide
+; but can be as high as necessary. Note that the coordinates are for the top-left corner
+;
+; The sprites are encoded as following:
+;
+;    - Each sprite has a maximum of 4 colors
+;    - Each pixel is encoded in 2 bits
+;    - 00 is always black
+;    - 11 is always white
+;    - 01 is the first color
+;    - 10 is the second color
+;
+; Parameters:
+;    
+;    - [bp + 4]         x coordinate
+;    - [bp + 6]         y coordinate
+;    - [bp + 8]         Second color
+;    - [bp + 10]        First color
+;    - [bp + 12]        How many bytes/rows the sprite has
+;    - [current_sprite] The sprite 
+;
 draw_sprite:
 
-    push bp                ; save old base pointer
-    mov bp, sp             ; use the current stack pointer as new base pointer
+    push bp                 ; Save old base pointer
+    mov bp, sp              ; Use the current stack pointer as new base pointer
     pusha
 
-    mov cx, [bp + 4]       ; x coordinate
-    mov dx, [bp + 6]       ; y coordinate
+    mov cx, [bp + 4]        ; x coordinate
+    mov dx, [bp + 6]        ; y coordinate
     
-                            ; initializing to 0, saves one byte from using mov
-    xor si, si              ; index of the bit we are checking (width)
-    xor di, di
+                            ; Initializing to 0, saves one byte from using mov
+    xor si, si              ; Index of the bit we are checking (width)
+    xor di, di              ; How many bytes we have checked
 
-.row: ; main loop, this will iterate over every bit of [rock], if it is a 1 the .one part will be executed, if it is a 0 the .zero part will
+.row:                       ; Main loop, we get 2 bits at a time to check the color
   
-    cmp si, 16           ; check if we have to move to the next byte/row
-    jne .same_row        ; Byte checked
+    cmp si, 16              ; Check if we have to move to the next byte/row
+    jne .same_row           ; Same byte
 
-    xor si, si           ; this executes if we move to the next row
-    add di, 2            ; next row
-    cmp di, [bp + 12]     ; if we have finished with the tile
+                            ; This executes if we move to the next row
+    xor si, si              ; Start from 0
+    add di, 2               ; Next row/byte
+    cmp di, [bp + 12]       ; If we have checked all bytes
     je .done
+                            ; Increment byte and x coordinate 
     inc dx
-
-    mov cx, [bp + 4]       ; x coordinate
+    mov cx, [bp + 4]        ; x coordinate
 
 .same_row:
 
-    xor bh, bh              ; store the color
+    xor bh, bh                    ; We will store the color index here
 
-    mov ax, [current_sprite + di]
+    mov ax, [current_sprite + di] ; Get the current byte
 
-    bt ax, si              ; first bit
-    jnc .next_bit
-    ;add bh, 1
+    bt ax, si                     ; First bit
+    jnc .next_bit                 ; If it is 1 increment bh by one
     inc bh
 
 .next_bit:
+
     inc si
-    bt ax, si              ; second bit
-    jnc .end_bit
+    bt ax, si                     ; Second bit
+    jnc .end_bit                  ; If it is 1 increment bh by two
     add bh, 2
 
 .end_bit:
-    cmp bh, 0              ; black
+    cmp bh, 0                     ; If the color is 0 (black) we just don't draw anything
     je .pass
 
-    mov ah, 0Ch ; draw
+    mov ah, 0Ch                   ; Draw instruction
 
-    cmp bh, 1              ; first_color
+    cmp bh, 1                     ; Draw first color
     je .first_color
 
-    cmp bh, 2              ; second_color
+    cmp bh, 2                     ; Draw second color
     je .second_color
 
-    jmp .white
+    jmp .white                    ; Draw white
 
 .first_color:
 
-    ; draw
-    ;xor bh, bh
-    mov al, [bp + 10]
-    ;int 10h
+    mov al, [bp + 10]             ; Set the first color
     jmp .draw
 
 .second_color:
 
-    ; draw
-    ;xor bh, bh
-    mov al, [bp + 8]
-    ;int 10h
+    mov al, [bp + 8]              ; Set the second color
     jmp .draw
 
 .white:
 
-    ; draw
-    mov al, 0Fh
-    ;int 10h
+    mov al, 0Fh                   ; Set white
     jmp .draw
 
 .draw:
-    xor bh, bh
+    xor bh, bh                    ; First page, funny note if you remove this instruction qemu will
+                                  ; still execute but it won't work in real hardware
     int 10h
 
 .pass:
+                                  ; Increment indexes and move on
     inc si
     inc cx
     jmp .row
 
 .done:
+
     popa
     mov sp, bp
     pop bp
-    ret 2 ; I only pop the y
+    ret 2                         ; Only pop the y
     
 
 current_sprite: dw 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,0x0000, 0x0000, 0x0000, 0x0000 ; 32 bytes       
-
 fire_left:     dw 0x2020, 0x8020, 0x8800, 0xA810, 0xA880, 0xA288, 0xA6A8, 0xAAA2, 0x9AA2, 0x66AA, 0x55AA, 0x7568, 0xFD68, 0xF5A0, 0x56A0, 0xAA00 ; 32 bytes
 fire_right:    dw 0x0808, 0x0802, 0x0022, 0x042A, 0x022A, 0x228A, 0x2A9A, 0x8AAA, 0x8AA6, 0xAA99, 0xAA55, 0x295D, 0x297F, 0x0A5F, 0x0A95, 0x00AA ; 32 bytes
 wiseman_left:  dw 0x5400, 0x7700, 0x4500, 0x4500, 0x5E00, 0xFF80, 0x0FA0, 0xFBE8, 0xFAE9, 0xFAA9, 0xE8A9, 0xA8A8, 0xA8A8, 0xAA20, 0xAA00, 0x9680 ; 32 bytes
