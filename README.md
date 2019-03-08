@@ -70,12 +70,15 @@ FAQ
 ------------
 
 * But why?
+
     As a learning exercise and to get a portable portfolio. This was a **very hard** project, I was very limited by the space constraints and I had to optimize the code for size, and then test all the quirks of qemu vs real hardware.
 
 * Can you explain how?
+
     I have tried my best to comment the code thoroughly, including my optimization decisions as well as the encoding of the sprites. I have also linked to a couple of Stackoverflow answers for deeper understanding.
 
 * But now your PDF is bigger!
+
     Yes, but 1018 bytes bigger or 0.01% bigger. For comparison, the image in this readme is 15016 bytes or 14.75 times bigger. The Firefox icon is 8532 bytes, 8.38 times bigger!
 
 
