@@ -1,8 +1,10 @@
 bits 16
 
 boot:
+
     jmp start
     TIMES 3-($-$$) DB 0x90   ; Support 2 or 3 byte encoded JMPs before BPB.
+    ;pdf:     db "%PDF-1.7.%"
 
     ; Dos 4.0 EBPB 1.44MB floppy
     OEMname:           db    "mkfs.fat"  ; mkfs.fat is what OEMname mkdosfs uses
@@ -382,7 +384,8 @@ draw_sprite:
 
     bt ax, si              ; first bit
     jnc .next_bit
-    add bh, 1
+    ;add bh, 1
+    inc bh
 
 .next_bit:
     inc si
@@ -452,4 +455,4 @@ wiseman_right: dw 0x0015, 0x00dd, 0x0051, 0x0051, 0x00b5, 0x02ff, 0x0af0, 0x2bef
 gef_left:      dw 0xAA00, 0xAA80, 0xAAA0, 0x88A8, 0x1818, 0x5158, 0x5558, 0x56A8, 0x5558, 0x5018, 0x5ED8, 0x5ED0, 0x9550, 0x65A0, 0x2A80, 0xBC00, 0x3F00, 0x33C0, 0x30F0, 0x3040, 0x0000, 0x2000 ; 44 bytes
 gef_right:     dw 0x00aa, 0x02aa, 0x0aaa, 0x2a22, 0x2424, 0x2545, 0x2555, 0x2a95, 0x2555, 0x2405, 0x27b5, 0x07b5, 0x0556, 0x0a59, 0x02a8, 0x003e, 0x00fc, 0x03cc, 0x0f0c, 0x010c, 0x0000, 0x0008 ; 44 bytes
 
-times 1024 - ($-$$) db 0 ; 1024 maximum size
+; The PDF header needs to be at most, here in 03FA (it must start at 1018 bytes) a lots of bytes were sacrified for this to work
