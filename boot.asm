@@ -2,9 +2,10 @@ bits 16
 
 boot:
 
+    ; This is a BPB, so that the BIOS does not overwrite our code
+    ; https://stackoverflow.com/questions/47277702/custom-bootloader-booted-via-usb-drive-produces-incorrect-output-on-some-compute
     jmp start
     TIMES 3-($-$$) DB 0x90   ; Support 2 or 3 byte encoded JMPs before BPB.
-    ;pdf:     db "%PDF-1.7.%"
 
     ; Dos 4.0 EBPB 1.44MB floppy
     OEMname:           db    "mkfs.fat"  ; mkfs.fat is what OEMname mkdosfs uses
