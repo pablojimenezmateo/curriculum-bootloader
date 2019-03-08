@@ -1,12 +1,12 @@
-My curriculum bootloader
+My curriculum is also a bootloader
 ====================================
 
-![ScreenShot](https://raw.github.com/gef3233/kindle-wallpaper/master/with_kindle.JPG)
+![ScreenShot](https://raw.githubusercontent.com/pjimenezmateo/curriculum-bootloader/master/Screenshot.png)
 
 What?
 ------------
 
-The PDF attached in this repository is both a working PDF of my CV and a custom bootloader for you to hire me.
+The PDF attached in this repository is both a working PDF of my CV and a custom bootloader created by me to impress technical recruiters.
 
 How?
 ------------
@@ -74,7 +74,7 @@ FAQ
 
 * Can you explain how?
     I have tried my best to comment the code thoroughly, including my optimization decisions as well as the encoding of the sprites. I have also linked to a couple of Stackoverflow answers for deeper understanding.
-    
+
 * But now your PDF is bigger!
     Yes, but 1018 bytes bigger or 0.01% bigger. For comparison, the image in this readme is 15016 bytes or 14.75 times bigger. The Firefox icon is 8532 bytes, 8.38 times bigger!
 
