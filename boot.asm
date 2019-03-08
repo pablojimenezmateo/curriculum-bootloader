@@ -278,7 +278,7 @@ draw_sprite:
     jne .same_row  ; Byte checked
 
     xor si, si     ; this executes if we move to the next row
-    cmp di, 32     ; if we have finished with the tile
+    cmp di, 30     ; if we have finished with the tile
     je .done
     add di, 2      ; next row
     inc dx
