@@ -88,7 +88,6 @@ jump_to_stage2:
     mov dl, 0x80
     jc jump_to_stage2 ; if error reading, set dl to 0x80 and try again, this should make it work in qemu
 
-
     jmp stage2
 
 ; ----------------------------------------------------------------------
@@ -260,11 +259,11 @@ dw 0xAA55                   ; PC boot signature
 
 stage2:
 
-    ; copy the current sprite
+    ;copy the current sprite
     mov      cx, 32
     lea      di, [current_sprite]
     lea      si, [wiseman_left]
-    rep      movsb
+    rep      MOVSb
 
     push 32                   ; how many bytes the sprite has
     push 06h                  ; first color, brown
@@ -277,7 +276,7 @@ stage2:
     mov      cx, 32
     lea      di, [current_sprite]
     lea      si, [wiseman_right]
-    rep      movsb
+    rep      MOVSb
 
     ;push 90                    ; y
     push 160                   ; x
@@ -287,7 +286,7 @@ stage2:
     mov      cx, 32
     lea      di, [current_sprite]
     lea      si, [fire_left]
-    rep      movsb
+    rep      MOVSb
 
     pop si
     pop si
@@ -303,12 +302,11 @@ stage2:
     push 224                   ; x
     call draw_sprite
 
-
     ; copy the current sprite
     mov      cx, 32
     lea      di, [current_sprite]
     lea      si, [fire_right]
-    rep      movsb
+    rep      MOVSb
 
     ;push 90                   ; y
     push 88                   ; x
@@ -322,7 +320,7 @@ stage2:
     mov      cx, 44
     lea      di, [current_sprite]
     lea      si, [gef_left]
-    rep      movsb
+    rep      MOVSb
 
     pop si
     pop si
@@ -340,7 +338,7 @@ stage2:
     mov      cx, 44
     lea      di, [current_sprite]
     lea      si, [gef_right]
-    rep      movsb
+    rep      MOVSb
 
     ;push 120                   ; y
     push 160                   ; x
@@ -354,7 +352,7 @@ draw_sprite:
 
     push bp                ; save old base pointer
     mov bp, sp             ; use the current stack pointer as new base pointer
-    ;pusha
+    pusha
 
     mov cx, [bp + 4]       ; x coordinate
     mov dx, [bp + 6]       ; y coordinate
@@ -409,23 +407,29 @@ draw_sprite:
 .first_color:
 
     ; draw
+    ;xor bh, bh
     mov al, [bp + 10]
-    int 10h
-    jmp .pass
+    ;int 10h
+    jmp .draw
 
 .second_color:
 
     ; draw
+    ;xor bh, bh
     mov al, [bp + 8]
-    int 10h
-    jmp .pass
+    ;int 10h
+    jmp .draw
 
 .white:
 
     ; draw
     mov al, 0Fh
+    ;int 10h
+    jmp .draw
+
+.draw:
+    xor bh, bh
     int 10h
-    jmp .pass
 
 .pass:
     inc si
@@ -433,7 +437,7 @@ draw_sprite:
     jmp .row
 
 .done:
-    ;popa
+    popa
     mov sp, bp
     pop bp
     ret 2 ; I only pop the y
