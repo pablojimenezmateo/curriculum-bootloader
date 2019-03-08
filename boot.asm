@@ -242,8 +242,8 @@ stage2:
 
     push 50                   ; y
     push 50                   ; x
-    push 0Ch                  ; first color, red
-    push 0Eh                  ; second color, yellow
+    push 06h                  ; first color, brown
+    push 0Ch                  ; second color, red
     push fire                 ; sprite to draw
     push 16                   ; how many rows the sprite has
     call draw_sprite
@@ -317,8 +317,8 @@ draw_sprite:
 
     ; draw
     mov ah, 0Ch
-    xor bh, bh             ; page number 0
-    mov al, 0Dh            ; Brown
+    xor bh, bh
+    mov al, [bp + 10]
     int 10h
     jmp .pass
 
@@ -326,8 +326,8 @@ draw_sprite:
 
     ; draw
     mov ah, 0Ch
-    xor bh, bh             ; page number 0
-    mov al, 0Eh            ; Brown
+    xor bh, bh        
+    mov al, [bp + 8]
     int 10h
     jmp .pass
 
@@ -335,8 +335,8 @@ draw_sprite:
 
     ; draw
     mov ah, 0Ch
-    xor bh, bh             ; page number 0
-    mov al, 0Fh            ; Brown
+    xor bh, bh
+    mov al, 0Fh
     int 10h
     jmp .pass
 
