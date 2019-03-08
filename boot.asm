@@ -26,6 +26,8 @@ boot:
     fileSysType:       db    "FAT12   "
 
 start:
+
+    mov [bootdrv], dl
     mov ax, 07C0h
     add ax, 288
     mov ss, ax              ; ss = stack space
@@ -45,6 +47,12 @@ start:
     push msg1               ; msg to write
     call print_text
     
+    push 11                 ; column
+    push 6                  ; row
+    push 17                 ; msg length
+    push msg2               ; msg to write
+    call print_text
+
     ;push 11                 ; column
     ;push 6                  ; row
     ;push 17                 ; msg length
@@ -53,14 +61,20 @@ start:
 
     call draw_border
 
-    ;----- Not enough space for sprites, move that to the second stage
 
+
+    ;----- Not enough space for sprites, move that to the second stage
+    ; https://stackoverflow.com/questions/2065370/how-to-load-second-stage-boot-loader-from-first-stage
     ; Load stage 2 to memory.
+    mov dl, [bootdrv]
+
+jump_to_stage2:
+
     mov ah, 0x02
     ; Number of sectors to read.
     mov al, 1
     ; This may not be necessary as many BIOS set it up as an initial state.
-    mov dl, 0x80
+    ;mov dl, 0x80
     ; Cylinder number.
     mov ch, 0
     ; Head number.
@@ -70,6 +84,10 @@ start:
     ; Where to load to.
     mov bx, stage2
     int 0x13
+
+    mov dl, 0x80
+    jc jump_to_stage2 ; if error reading, set dl to 0x80 and try again, this should make it work in qemu
+
 
     jmp stage2
 
@@ -230,29 +248,26 @@ print_text:
 
     ret 8
 
+bootdrv: db 0
+
 msg1:    db "IT'S DANGEROUS TO GO"
-msg2:    db "ALONE!   HIRE ME."
+msg2:    db "ALONE!   TAKE ME."
 rock:    dw 0xC3B7, 0xDFCF, 0xFFCF, 0x7FCF, 0x7FE6, 0xFFEF, 0xBFEF, 0xBFEF, 0x7FE7, 0xFFEF, 0x7DE7, 0x3C9B, 0x7DFD, 0xBC7D, 0xFCFF, 0x2CFC ; 32 bytes
 
 times 510 - ($ - $$) db 0   ; padding with 0 at the end
 dw 0xAA55                   ; PC boot signature
 
+;times  566 - ($ - $$) db 0   ; padding with 0 at the end
 
 stage2:
 
-    push 70                   ; y
-    push 90                   ; x
+    push 90                   ; y
+    push 144                   ; x
     push 06h                  ; first color, brown
     push 0Ch                  ; second color, red
-    push word [wiseman_left]              ; sprite to draw
-    push 44                   ; how many bytes the sprite has
+    push word [wiseman_left]  ; sprite to draw
+    push 32                   ; how many bytes the sprite has
     call draw_sprite
-
-    push 11                 ; column
-    push 6                  ; row
-    push 17                 ; msg length
-    push msg2               ; msg to write
-    call print_text
 
    cli
    hlt
@@ -288,7 +303,9 @@ draw_sprite:
 .same_row:
 
     xor bh, bh              ; store the color
-    mov ax, [gef_right + di]
+
+    mov ax, [wiseman_left + di]
+
     bt ax, si              ; first bit
     jnc .next_bit
     add bh, 1
