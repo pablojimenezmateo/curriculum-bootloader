@@ -6,7 +6,7 @@ My curriculum is also a bootloader
 What?
 ------------
 
-The PDF attached in this repository is both a working PDF of my CV and a custom bootloader created by me to impress technical recruiters.
+The PDF attached in this repository is both a working PDF of my CV and a custom bootloader created by me to impress technical recruiters. [Check the discussion in HN](https://news.ycombinator.com/item?id=19344146)
 
 How?
 ------------
