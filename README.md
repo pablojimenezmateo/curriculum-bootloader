@@ -26,7 +26,7 @@ Sure! You can do so by two means, in real hardware (I spend a lot of time making
 
 You can use [Win32 Disk Imager](https://sourceforge.net/projects/win32diskimager/) and use the PDF as the input image.
 
-To recover your USB just left click on it and format normally.
+To recover your USB just right click on it and format normally.
 
 ##### Linux
 **NOTE:** Please be very careful with this command. If you select the wrong drive **you will lose data**.
@@ -93,7 +93,7 @@ FAQ
 
 * But now your PDF is bigger!
 
-    Yes, but 1018 bytes bigger or 0.01% bigger. For comparison, the gif in this readme is 1639479 bytes or 1610,49 times bigger! The Firefox icon is 8532 bytes, 8.38 times bigger!
+    Yes, but 1018 bytes bigger or 0.01% bigger. For comparison, the gif in this readme is 2778093 bytes or 2728,97 times bigger! The Firefox icon is 8532 bytes, 8.38 times bigger!
 
 
 
