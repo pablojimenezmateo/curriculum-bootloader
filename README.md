@@ -16,7 +16,7 @@ I wrote a tiny bootloader of 1018 bytes, which is the perfect size since the PDF
 Can I try it?
 ------------
 
-Sure! You can do so by two means, in real hardware (I spend a lot of time making it compatible) of in an emulated environment.
+Sure! You can do so by two means, in real hardware (I spend a lot of time making it compatible) or in an emulated environment.
 
 #### Real hardware
 
