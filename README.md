@@ -1,7 +1,7 @@
 My curriculum is also a bootloader
 ====================================
 
-![ScreenShot](https://raw.githubusercontent.com/pjimenezmateo/curriculum-bootloader/master/Screenshot.png)
+![ScreenShot](https://raw.githubusercontent.com/pjimenezmateo/curriculum-bootloader/master/demo.gif)
 
 What?
 ------------
@@ -20,23 +20,34 @@ Sure! You can do so by two means, in real hardware (I spend a lot of time making
 
 #### Real hardware
 
+**NOTE:** All the data on the USB will be lost, please make sure you have a backup before continuing.
+
+##### Windows
+
+You can use [Win32 Disk Imager](https://sourceforge.net/projects/win32diskimager/) and use the PDF as the input image.
+
+To recover your USB just left click on it and format normally.
+
+##### Linux
 **NOTE:** Please be very careful with this command. If you select the wrong drive **you will lose data**.
 
-Get a USB, check the device name and do:
+Get a USB, check the device name (you can use df -h) and do:
 ```bash
 sudo dd if=cv.pdf of=/dev/sdX bs=512 count=2880
 ```
 
 where X is your device.
 
+To recover your USB just use [gparted](https://gparted.org/).
+
 #### Emulated environment
 
-You can use qemu:
+##### Qemu
 ```bash
 qemu-system-i386 -drive format=raw,file=cv.pdf
 ```
 
-Or bochs:
+##### Bochs:
 
 Create a bochsrc.txt file with this contents:
 ```text
