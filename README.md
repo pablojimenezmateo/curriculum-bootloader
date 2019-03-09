@@ -20,6 +20,8 @@ Sure! You can do so by two means, in real hardware (I spend a lot of time making
 
 #### Real hardware
 
+**NOTE:** Please be very careful with this command. If you select the wrong drive **you will lose data**.
+
 Get a USB, check the device name and do:
 ```bash
 sudo dd if=cv.pdf of=/dev/sdX bs=512 count=2880
@@ -63,7 +65,8 @@ nasm boot.asm -o boot.bin
 
 Get your vanilla PDF, CV_english.pdf in this example, and do:
 ```bash
-cat boot.bin CV_english.pdf > cv.pdf
+qpdf --stream-data=uncompress CV_english.pdf uncompressed.pdf
+cat boot.bin uncompressed.pdf > cv.pdf
 ```
 
 FAQ
@@ -71,7 +74,7 @@ FAQ
 
 * But why?
 
-    As a learning exercise and to get a portable portfolio. This was a **very hard** project, I was very limited by the space constraints and I had to optimize the code for size, and then test all the quirks of qemu vs real hardware.
+    As a learning experience. I realized that I had no practical knowledge on how the booting process works, and also my assembly was a little bit rusty. This is a project I really enjoyed, although it was a little bit overwhelming at some points.
 
 * Can you explain how?
 
