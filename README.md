@@ -93,7 +93,7 @@ FAQ
 
 * But now your PDF is bigger!
 
-    Yes, but 1018 bytes bigger or 0.01% bigger. For comparison, the gif in this readme is 6433905 bytes or 6320,14 times bigger! The Firefox icon is 8532 bytes, 8.38 times bigger!
+    Yes, but 1018 bytes bigger or 0.01% bigger. For comparison, the gif in this readme is 1639479 bytes or 1610,49 times bigger! The Firefox icon is 8532 bytes, 8.38 times bigger!
 
 
 
