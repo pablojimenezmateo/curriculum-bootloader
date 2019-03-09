@@ -11,7 +11,7 @@ The PDF attached in this repository is both a working PDF of my CV and a custom 
 How?
 ------------
 
-I wrote a tiny bootloader of 1018 bytes, which is the perfect size since the PDF header has to be in the first 1024 bytes. Then I just copy the first bytes of my bootloader at the beginning of my CV and that is it, a working PDF and bootloader.
+I wrote a tiny bootloader of 1018 bytes. Then I just copy the first bytes of my bootloader at the beginning of my CV and that is it, a working PDF and bootloader.
 
 Can I try it?
 ------------
@@ -93,7 +93,7 @@ FAQ
 
 * But now your PDF is bigger!
 
-    Yes, but 1018 bytes bigger or 0.01% bigger. For comparison, the image in this readme is 15016 bytes or 14.75 times bigger. The Firefox icon is 8532 bytes, 8.38 times bigger!
+    Yes, but 1018 bytes bigger or 0.01% bigger. For comparison, the gif in this readme is 6433905 bytes or 6320,14 times bigger! The Firefox icon is 8532 bytes, 8.38 times bigger!
 
 
 
