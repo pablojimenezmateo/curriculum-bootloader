@@ -76,8 +76,8 @@ nasm boot.asm -o boot.bin
 
 Get your vanilla PDF, CV_english.pdf in this example, and do:
 ```bash
-qpdf --stream-data=uncompress CV_english.pdf uncompressed.pdf
-cat boot.bin uncompressed.pdf > cv.pdf
+qpdf --stream-data=uncompress --object-streams=disable CV_english.pdf uncompressed.pdf
+python3 append_bootloader_to_cv.py
 ```
 
 FAQ
