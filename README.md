@@ -78,7 +78,7 @@ nasm boot.asm -o boot.bin
 Get your vanilla PDF, CV_english.pdf in this example, and do:
 ```bash
 qpdf --stream-data=uncompress --object-streams=disable CV_english.pdf uncompressed.pdf
-python3 append_bootloader_to_cv.py
+python3 patch.py
 ```
 
 FAQ
@@ -94,7 +94,7 @@ FAQ
 
 * But now your PDF is bigger!
 
-    Yes, but 1018 bytes bigger or 0.01% bigger. For comparison, the gif in this readme is 2778093 bytes or 2728,97 times bigger! The Firefox icon is 8532 bytes, 8.38 times bigger!
+    Yes, but 1018 bytes bigger or less than 0.01% bigger. For comparison, the gif in this readme is 2778093 bytes or 2728,97 times bigger! The Firefox icon is 8532 bytes, 8.38 times bigger!
 
 
 

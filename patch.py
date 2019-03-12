@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 '''
 This utility merges my CV with the bootloader,
 this way makes it work in Adobe Reader as well
