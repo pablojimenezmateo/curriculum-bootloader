@@ -28,6 +28,9 @@ boot:
     volumeLabel:       db    "NO NAME    "
     fileSysType:       db    "FAT12   "
 
+    ; This is used to offset all memory addresses by 8 bytes, or the size of the PDF magic numbers
+    dw 0xffff, 0xffff, 0xffff, 0xffff
+
 start:
 
     ; In real hardware the BIOS puts the address of the booting drive on the dl register
