@@ -34,6 +34,7 @@ To recover your USB just right click on it and format normally.
 Get a USB, check the device name (you can use df -h) and do:
 ```bash
 sudo dd if=cv.pdf of=/dev/sdX bs=512 count=2880
+sync
 ```
 
 where X is your device.
