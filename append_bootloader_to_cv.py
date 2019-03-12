@@ -3,6 +3,20 @@ This utility merges my CV with the bootloader,
 this way makes it work in Adobe Reader as well
 as in all the rest I have tested.
 '''
+import os
+import sys
+
+if not os.path.isfile('boot.bin'):
+
+	print("boot.bin does not exist, please follow the instructions to create it.")
+	sys.exit(-1)
+
+if not os.path.isfile('uncompressed.pdf'):
+
+	print("uncompressed.pdf does not exist, please follow the instructions to create it.")
+	sys.exit(-1)
+
+
 
 with open("boot.bin", "rb") as binaryfile :
     bootloader  = bytearray(binaryfile.read())
