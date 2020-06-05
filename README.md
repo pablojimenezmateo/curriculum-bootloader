@@ -1,7 +1,7 @@
 My curriculum is also a bootloader
 ====================================
 
-![ScreenShot](https://raw.githubusercontent.com/pjimenezmateo/curriculum-bootloader/master/demo.gif)
+![ScreenShot](demo.gif)
 
 What?
 ------------
