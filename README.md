@@ -33,7 +33,7 @@ To recover your USB just right click on it and format normally.
 
 Get a USB, check the device name (you can use df -h) and do:
 ```bash
-sudo dd if=cv.pdf of=/dev/sdX bs=512 count=2880
+sudo dd if=pablo_jimenez_mateo_cv.pdf of=/dev/sdX bs=512 count=2880
 sync
 ```
 
@@ -45,7 +45,7 @@ To recover your USB just use [gparted](https://gparted.org/).
 
 ##### Qemu
 ```bash
-qemu-system-i386 -drive format=raw,file=cv.pdf
+qemu-system-i386 -drive format=raw,file=pablo_jimenez_mateo_cv.pdf
 ```
 
 ##### Bochs:
@@ -55,7 +55,7 @@ Create a bochsrc.txt file with this contents:
 megs: 32
 romimage: file=/usr/share/bochs/BIOS-bochs-latest, address=0xfffe0000
 vgaromimage: file=/usr/share/bochs/VGABIOS-lgpl-latest
-floppya: 1_44=cv.pdf, status=inserted
+floppya: 1_44=pablo_jimenez_mateo_cv.pdf, status=inserted
 boot: a
 log: bochsout.txt
 mouse: enabled=0
